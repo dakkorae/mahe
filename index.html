@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#0ea5c6">
+<meta name="theme-color" content="#f5f5f4">
 <meta name="description" content="각자 스마트폰으로 함께 하는 거북이 알 낳기 주사위 게임">
 <title>Mahe for mobile</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='36' rx='22' ry='16' fill='%2322c55e'/%3E%3Ccircle cx='52' cy='30' r='7' fill='%239fdc7c'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap">
+<link rel="preload" href="assets/logo.png" as="image">
 <link rel="stylesheet" href="css/style.css">
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }
@@ -19,10 +20,10 @@
 <body class="portrait">
 <div id="loading" class="loading">
   <div class="loading-box">
-    <div class="loading-turtle">🐢</div>
-    <div class="loading-title">Mahe <span>for mobile</span></div>
+    <img class="logo" src="assets/logo.png" alt="야자수 아래 거북이" width="480" height="440">
+    <div class="wordmark">Mahe<span class="wordmark-sub">FOR MOBILE</span></div>
     <div class="progress"><div id="progressBar"></div></div>
-    <div id="loadingText" class="muted">불러오는 중…</div>
+    <div id="loadingText" class="muted">불러오는 중</div>
   </div>
 </div>
 
@@ -42,13 +43,12 @@
     <header class="topbar">
       <div class="top-left">
         <span id="roomBadge" class="badge"></span>
-        <span class="deck" title="남은 알 카드"><span class="egg-ico">🥚</span><b id="deckLeft">20</b>장</span>
-        <span id="openCard" class="open-card" title="지금 공개된 알 카드"></span>
+        <span class="chip" title="남은 알 카드">남은 카드 <b id="deckLeft">24</b></span>
+        <span id="openCard" class="chip open-card" title="지금 공개된 알 카드"></span>
       </div>
-      <div class="top-right">
-        <button id="btnExit" class="exit-btn" aria-label="나가기">나가기</button>
-        <button id="btnMenu" class="icon-btn" aria-label="설정">⚙️</button>
-      </div>
+      <button id="btnMenu" class="icon-btn" aria-label="설정 · 나가기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
     </header>
     <div id="turnLine" class="turn-line"></div>
     <div id="timer" class="timer" hidden><div></div></div>
@@ -63,16 +63,16 @@
 <div id="menu" class="sheet" hidden>
   <div class="sheet-box">
     <h3>설정</h3>
+    <div id="menuExtra"></div>
     <label class="row">그래픽 품질
       <select id="selQuality">
         <option value="auto">자동</option><option value="high">높음</option><option value="medium">보통</option><option value="low">낮음</option>
       </select>
     </label>
     <label class="row">효과음 <input type="checkbox" id="chkSound"></label>
-    <div id="menuExtra"></div>
     <div class="sheet-actions">
-      <button id="btnLeave" class="btn ghost">게임에서 나가기</button>
-      <button id="btnCloseMenu" class="btn">닫기</button>
+      <button id="btnLeave" class="btn block">게임에서 나가기</button>
+      <button id="btnCloseMenu" class="btn ghost block">닫기</button>
     </div>
   </div>
 </div>

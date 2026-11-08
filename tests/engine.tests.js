@@ -32,13 +32,13 @@ const eq = (a, b, msg = '') => {
 };
 const ok = (v, msg) => { if (!v) throw new Error(msg || '조건 실패'); };
 
-test('알 카드 구성은 24장 87알(1·2·6알 3장씩, 3·4·5알 5장씩), 덱은 20장', () => {
+test('알 카드 구성은 24장 87알(1·2·6알 3장씩, 3·4·5알 5장씩), 덱은 24장 전부', () => {
   eq(E.EGG_CARDS.length, 24);
   eq(E.diceSum(E.EGG_CARDS), 87);
   const count = v => E.EGG_CARDS.filter(x => x === v).length;
   eq([1, 2, 3, 4, 5, 6].map(count), [3, 3, 5, 5, 5, 3]);
   const s = baseState();
-  eq(s.deck.length, 20);
+  eq(s.deck.length, 24);
 });
 
 test('이동 거리 = 합 × 개수, 계속 가능 여부', () => {
@@ -127,7 +127,7 @@ test('21번 통과 시 무리의 맨 위 주인이 공개 카드를 가져간다
   eq(s.board[2], ['red', 'blue']);
   eq(s.eggs.b, [top], 'blue 주인 b가 획득');
   eq(s.eggs.a, []);
-  eq(s.deck.length, 19);
+  eq(s.deck.length, 23);
 });
 
 test('21칸 이동하면 제자리로 돌아오며 카드 획득', () => {

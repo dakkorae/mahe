@@ -110,8 +110,8 @@ async function loadScene() {
 }
 
 // ---------- 첫 화면 ----------
-function brand() {
-  return `<div class="brand"><div class="turtles">🐢🥚🐢</div><h1>Mahe<small>FOR MOBILE</small></h1></div>`;
+function brand(withLogo = false) {
+  return `<div class="brand">${withLogo ? '<img class="logo" src="assets/logo.png" alt="야자수 아래 거북이" width="480" height="440">' : ''}<h1>Mahe<small>FOR MOBILE</small></h1></div>`;
 }
 
 function showHome() {
@@ -125,23 +125,23 @@ function showHome() {
     ? `<p class="notice">온라인 방을 쓰려면 <b>js/firebase-config.js</b>에 Firebase 설정값을 넣어야 해요 (SETUP.md 참고). 지금은 <b>한 기기로 하기</b>만 할 수 있어요.</p>`
     : app.onlineError ? `<p class="notice">${esc(app.onlineError)}</p>` : '';
   $('screen').className = 'screen wide';
-  $('screen').innerHTML = brand() + (invite && online ? `
+  $('screen').innerHTML = brand(true) + (invite && online ? `
     <section class="card">
       <div class="eyebrow">INVITATION</div>
       <h2>방 ${esc(invite)}에 초대받았어요</h2>
       <label class="field"><span>닉네임</span><input id="inName" maxlength="12" value="${esc(name)}" placeholder="예: 민지" autocomplete="nickname"></label>
-      <button class="btn orange block" data-act="join" data-code="${esc(invite)}">참가하기</button>
+      <button class="btn block" data-act="join" data-code="${esc(invite)}">참가하기</button>
       <p class="muted center" style="margin:10px 0 0"><a href="${esc(location.pathname)}">처음 화면으로</a></p>
     </section>` : `
     <section class="card">
       ${offlineNote}
       <label class="field"><span>닉네임</span><input id="inName" maxlength="12" value="${esc(name)}" placeholder="예: 민지" autocomplete="nickname"></label>
       <div class="stack">
-        <button class="btn orange block" data-act="create" ${online ? '' : 'disabled'}>방 만들기</button>
+        <button class="btn block" data-act="create" ${online ? '' : 'disabled'}>방 만들기</button>
         <div class="divider">또는 방 코드로 참가</div>
         <div class="row" style="gap:8px">
-          <input id="inCode" class="field code-input" style="flex:1;height:48px;border:2px solid var(--line);border-radius:12px;margin:0;min-width:0" inputmode="numeric" maxlength="4" placeholder="0000" ${online ? '' : 'disabled'}>
-          <button class="btn" data-act="join" ${online ? '' : 'disabled'}>참가</button>
+          <input id="inCode" class="text-input code-input" style="flex:1;min-width:0" inputmode="numeric" maxlength="4" placeholder="0000" ${online ? '' : 'disabled'}>
+          <button class="btn ghost" data-act="join" ${online ? '' : 'disabled'}>참가</button>
         </div>
       </div>
     </section>
@@ -152,7 +152,7 @@ function showHome() {
     </section>
     <section class="card">
       <h2>규칙 한눈에</h2>
-      <ol class="muted" style="margin:0;padding-left:18px">
+      <ol class="rules">
         <li>주사위를 굴리고, 더 굴릴지 멈출지 정해요 (최대 3개).</li>
         <li>합이 <b>7을 넘으면</b> 실패! 거북이가 뗏목으로 돌아가요.</li>
         <li>멈추면 <b>합 × 주사위 개수</b>만큼 앞으로 가요.</li>
@@ -275,7 +275,7 @@ function renderLobby() {
     <h2>참가자 ${n}/${E.MAX_PLAYERS}</h2>
     <ul class="plist">
       ${players.map(([id, p]) => `<li>${colorDot(p.color, initial(p.name))}
-        <span class="pname">${esc(p.name)}${id === room.meta.hostUid ? '<span class="tag">HOST</span>' : ''}${id === my ? '<span class="tag me">나</span>' : ''}</span>
+        <span class="pname">${esc(p.name)}${id === room.meta.hostUid ? '<span class="tag host">HOST</span>' : ''}${id === my ? '<span class="tag me">나</span>' : ''}</span>
         <span class="online ${p.connected === false ? 'off' : ''}" title="${p.connected === false ? '연결 끊김' : '접속 중'}"></span></li>`).join('')}
     </ul>
     <p class="muted" style="margin:8px 0 0">${n <= 3 ? `2~3명이면 거북이를 <b>1인당 2마리</b>씩 자동으로 받아요.` : '1인당 거북이 1마리로 해요.'}</p>
@@ -292,7 +292,7 @@ function renderLobby() {
   </section>
   <section class="card stack">
     ${host
-      ? `<button class="btn green block" data-act="start" ${n >= 2 && !dup ? '' : 'disabled'}>게임 시작</button>
+      ? `<button class="btn block" data-act="start" ${n >= 2 && !dup ? '' : 'disabled'}>게임 시작</button>
          ${n < 2 ? '<p class="muted center" style="margin:0">2명 이상 모이면 시작할 수 있어요</p>' : dup ? '<p class="muted center" style="margin:0">색이 겹치는 사람이 있어요</p>' : ''}`
       : '<p class="center muted" style="margin:0">호스트가 게임을 시작하길 기다리는 중…</p>'}
     <button class="btn ghost block" data-act="leave">${host ? '방 닫기' : '나가기'}</button>
@@ -345,7 +345,7 @@ function showHotseatSetup() {
       ${colorDot(r.color, initial(r.name))}
       <input data-hs-name="${i}" maxlength="12" value="${esc(r.name)}" aria-label="${i + 1}번 이름">
       <select data-hs-color="${i}" aria-label="${i + 1}번 색">${E.COLORS.map(c => `<option value="${c.id}" ${r.color === c.id ? 'selected' : ''} ${hotseatRows.some((o, j) => j !== i && o.color === c.id) ? 'disabled' : ''}>${c.name}</option>`).join('')}</select>
-      <button class="icon-btn" data-act="hs-del" data-i="${i}" aria-label="빼기" ${hotseatRows.length <= 2 ? 'disabled' : ''}>✕</button>
+      <button class="icon-btn" data-act="hs-del" data-i="${i}" aria-label="빼기" ${hotseatRows.length <= 2 ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>`).join('')}
     </div>
     <button class="btn ghost block small" data-act="hs-add" ${hotseatRows.length >= 7 ? 'disabled' : ''}>+ 사람 추가</button>
@@ -357,7 +357,7 @@ function showHotseatSetup() {
     <label class="toggle"><span>확률 힌트<small>"다음 주사위가 안전할 확률" 표시</small></span><input type="checkbox" data-set="probHint" checked></label>
   </section>
   <section class="card stack">
-    <button class="btn green block" data-act="hs-start">게임 시작</button>
+    <button class="btn block" data-act="hs-start">게임 시작</button>
     <button class="btn ghost block" data-act="home">처음 화면으로</button>
   </section>`;
   void s;
@@ -472,8 +472,8 @@ function renderPanel(state, { busy = false, keepDice = false } = {}) {
   $('roomBadge').textContent = app.mode === 'online' ? app.code : '한 기기';
   $('deckLeft').textContent = state.deck.length;
   const oc = $('openCard');
-  if (state.deck.length) { oc.textContent = `공개 카드: 알 ${state.deck[0]}개`; oc.classList.remove('bonus'); }
-  else if (state.phase !== 'ended') { oc.textContent = '🏖️ 7알 보너스 해변!'; oc.classList.add('bonus'); }
+  if (state.deck.length) { oc.innerHTML = `공개 카드 <b>${state.deck[0]}알</b>`; oc.classList.remove('bonus'); }
+  else if (state.phase !== 'ended') { oc.textContent = '7알 보너스 해변'; oc.classList.add('bonus'); }
   else { oc.textContent = '게임 끝'; oc.classList.add('bonus'); }
 
   // 턴 안내
@@ -481,10 +481,11 @@ function renderPanel(state, { busy = false, keepDice = false } = {}) {
   else {
     const roller = E.nameOf(state, c.roller), decider = E.nameOf(state, c.decider);
     const t = c.turtle ? `${colorDot(c.turtle, '', true)} ` : '';
-    let line = `<span class="who">${esc(roller)}</span> 차례`;
-    if (state.phase === 'decide') line += c.decider === c.roller ? ` · ${t}결정: ${esc(roller)}` : ` · ${t}결정: <span class="who">${esc(decider)}</span>(맨 위)`;
-    else if (state.phase === 'roll') line += ` · ${t}${E.COLOR_BY_ID[c.turtle].name} 거북이`;
-    else line += ' · 먼저 움직일 거북이 고르기';
+    const sep = '<span class="sep">|</span>';
+    let line = `<span>${esc(roller)} 차례</span>${sep}`;
+    if (state.phase === 'decide') line += `${t}<span class="sub">결정</span> ${esc(c.decider === c.roller ? roller : decider)}${c.decider === c.roller ? '' : ' <span class="sub">(맨 위)</span>'}`;
+    else if (state.phase === 'roll') line += `${t}<span class="sub">${E.COLOR_BY_ID[c.turtle].name} 거북이</span>`;
+    else line += '<span class="sub">먼저 움직일 거북이 고르기</span>';
     $('turnLine').innerHTML = line;
   }
 
@@ -495,24 +496,23 @@ function renderPanel(state, { busy = false, keepDice = false } = {}) {
   const uid = me();
   const local = app.mode === 'local';
   if (state.phase === 'ended' || !c) {
-    acts.innerHTML = `<button class="btn orange" data-act="show-result">결과 보기</button>`;
+    acts.innerHTML = `<button class="btn" data-act="show-result">결과 보기</button>`;
   } else {
     const actorUid = state.phase === 'decide' ? c.decider : c.roller;
     const mine = local || actorUid === uid;
-    const who = local ? `${esc(E.nameOf(state, actorUid))}: ` : '';
     const dis = busy || !mine ? 'disabled' : '';
     let html = '';
     if (!mine) {
       const off = !playerConnected(actorUid) ? ' (연결 끊김 · 곧 자동 진행)' : '';
       html = `<div class="wait">${esc(E.nameOf(state, actorUid))} ${state.phase === 'decide' ? '결정' : state.phase === 'roll' ? '굴리기' : '선택'} 중…${off}</div>`;
     } else if (state.phase === 'chooseTurtle') {
-      html = E.legalActions(state).map(a => `<button class="btn" style="background:${E.COLOR_BY_ID[a.turtle].hex}" data-act="game" data-type="choose" data-turtle="${a.turtle}" ${dis}>${who}${E.COLOR_BY_ID[a.turtle].name} 먼저</button>`).join('');
+      html = E.legalActions(state).map(a => `<button class="btn turtle" style="background:${E.COLOR_BY_ID[a.turtle].hex}" data-act="game" data-type="choose" data-turtle="${a.turtle}" ${dis}>${E.COLOR_BY_ID[a.turtle].name} 먼저</button>`).join('');
     } else if (state.phase === 'roll') {
-      html = `<button class="btn orange" data-act="game" data-type="roll" ${dis}>🎲 ${who}주사위 굴리기</button>`;
+      html = `<button class="btn" data-act="game" data-type="roll" ${dis}>주사위 굴리기</button>`;
     } else if (state.phase === 'decide') {
       const dist = E.moveDistance(c.dice);
-      html = `<button class="btn" data-act="game" data-type="more" ${dis}>🎲 ${who}한 번 더</button>
-              <button class="btn green" data-act="game" data-type="stop" ${dis}>멈추고 이동 (${dist}칸)</button>`;
+      html = `<button class="btn ghost" data-act="game" data-type="more" ${dis}>한 번 더</button>
+              <button class="btn" data-act="game" data-type="stop" ${dis}>멈추고 ${dist}칸 이동</button>`;
       if (state.settings.probHint) {
         const ok = E.safeOutcomes(c.dice);
         html += `<div class="hint">다음 주사위가 안전할 확률 <b>${ok}/6</b>${ok === 0 ? ' · 무조건 실패!' : ''}</div>`;
@@ -531,7 +531,7 @@ function renderPanel(state, { busy = false, keepDice = false } = {}) {
     const cols = E.turtlesOf(state, r.id);
     const cls = ['score', r.id === uid ? 'me' : '', c && c.roller === r.id && state.phase !== 'ended' ? 'turn' : '', playerConnected(r.id) ? '' : 'off'].join(' ');
     return `<div class="${cls}" title="알 ${r.eggs}개 · 카드 ${r.cards}장"><span class="dots">${cols.map(col => colorDot(col, initial(E.nameOf(state, r.id)), true)).join('')}</span>
-      <span class="sname">${esc(E.nameOf(state, r.id))}</span><span class="sval">🥚${r.eggs}<small>·${r.cards}장</small></span></div>`;
+      <span class="sname">${esc(E.nameOf(state, r.id))}</span><span class="sval">${r.eggs}<small>알 · ${r.cards}장</small></span></div>`;
   }).join('');
 
   $('logList').innerHTML = (state.log || []).slice(0, 12).map(l => `<li>${esc(l.text)}</li>`).join('');
@@ -594,20 +594,20 @@ function showResult(state) {
   const host = isHost();
   const winners = rows.filter(r => r.rank === 1).map(r => r.name);
   $('result').innerHTML = `<div class="card">
-    <p class="title-big">🏆 ${esc(winners.join(', '))} 승리!</p>
+    <p class="title-sub">RESULT</p>
+    <p class="title-big">${esc(winners.join(', '))} 승리</p>
     <ol class="rank-list">
       ${rows.map(r => `<li class="${r.rank === 1 ? 'first' : ''}">
         <span class="rank-no">${r.rank}</span>
         <span class="dots">${E.turtlesOf(state, r.uid).map(c => colorDot(c, initial(r.name), true)).join('')}</span>
-        <span class="pname">${esc(r.name)}<br><span class="rank-cards">카드 ${r.cards}장${r.list.length ? ' · ' + r.list.join(', ') : ''}${r.bonus ? ' · 🏖️ 보너스 7' : ''}</span></span>
-        <span class="rank-eggs">🥚 ${r.eggs}</span></li>`).join('')}
+        <span class="pname">${esc(r.name)}<br><span class="rank-cards">카드 ${r.cards}장${r.list.length ? ' · ' + r.list.join(', ') : ''}${r.bonus ? ' · 보너스 7' : ''}</span></span>
+        <span class="rank-eggs">${r.eggs}<small>알</small></span></li>`).join('')}
     </ol>
     <div class="stack">
-      ${host ? `<button class="btn green block" data-act="again">같은 멤버로 다시 하기</button>
+      ${host ? `<button class="btn block" data-act="again">같은 멤버로 다시 하기</button>
                 <button class="btn ghost block" data-act="${app.mode === 'local' ? 'home-confirm' : 'to-lobby'}">${app.mode === 'local' ? '처음 화면으로' : '대기실로'}</button>`
              : '<p class="muted center" style="margin:0">호스트가 다음 판을 정하는 중…</p>'}
       <button class="btn ghost block small" data-act="hide-result">보드 보기</button>
-      ${app.mode === 'online' ? `<button class="btn ghost block small" data-act="exit">${host ? '방 닫고 나가기' : '나가기'}</button>` : ''}
     </div></div>`;
   $('result').hidden = false;
 }
@@ -616,9 +616,9 @@ function showResult(state) {
 function openMenu() {
   $('selQuality').value = store('mahe_quality') || 'auto';
   $('chkSound').checked = soundOn();
-  $('btnLeave').textContent = app.mode === 'online' && isHost() ? '방 닫기' : '게임에서 나가기';
+  $('btnLeave').textContent = app.mode === 'online' && isHost() ? '방 닫고 나가기' : '게임에서 나가기';
   const extra = $('menuExtra');
-  extra.innerHTML = app.mode === 'online' ? `<p class="muted">방 코드 <b>${esc(app.code)}</b> · ${isHost() ? '내가 호스트' : '호스트: ' + esc((app.room.players[app.room.meta.hostUid] || {}).name || '?')}</p>` : '';
+  extra.innerHTML = app.mode === 'online' ? `<p class="muted" style="margin:0 0 4px">방 ${esc(app.code)} · ${isHost() ? '내가 호스트' : '호스트 ' + esc((app.room.players[app.room.meta.hostUid] || {}).name || '?')}</p>` : '<p class="muted" style="margin:0 0 4px">한 기기 모드</p>';
   $('menu').hidden = false;
 }
 
@@ -705,7 +705,6 @@ async function exitGame() {
   leaveLocal();
 }
 $('btnLeave').addEventListener('click', exitGame);
-$('btnExit').addEventListener('click', exitGame);
 
 // 테스트·디버그용
 window.__mahe = app;

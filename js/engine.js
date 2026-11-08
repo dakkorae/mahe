@@ -9,7 +9,7 @@ export const BUST_OVER = 7;        // 합이 7을 넘으면 실패
 export const BONUS_EGGS = 7;
 // 알 카드 24장: 1알 3장, 2알 3장, 3알 5장, 4알 5장, 5알 5장, 6알 3장 (총 87알)
 export const EGG_CARDS = [6, 6, 6, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1];
-export const DECK_SIZE = 20;       // 24장 중 4장은 보지 않고 뺀다
+export const DECK_SIZE = 24;       // 알 카드 24장을 모두 섞어 덱으로 쓴다
 
 export const COLORS = [
   { id: 'red',    name: '빨강', hex: '#ef4444' },
