@@ -1,13 +1,13 @@
-// ① Firebase 설정값 — Firebase 콘솔 > 프로젝트 설정 > 내 앱(웹)에서 복사한 값으로 바꿔 넣으세요.
-//    (이 값들은 공개되어도 괜찮은 값입니다. 데이터 보호는 database.rules.json 보안 규칙이 맡습니다.)
+// Firebase 설정값 — mahe-for-mobile 프로젝트
+// (이 값들은 공개되어도 괜찮은 값입니다. 데이터 보호는 database.rules.json 보안 규칙이 맡습니다.)
 export const firebaseConfig = {
-  apiKey: "여기에-apiKey",
+  apiKey: "AIzaSyDSQvuHwmLAqWNlJDzms4LUCxeUWEAONnA",
   authDomain: "mahe-for-mobile.firebaseapp.com",
-  databaseURL: "여기에-databaseURL",
+  databaseURL: "https://mahe-for-mobile-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "mahe-for-mobile",
   storageBucket: "mahe-for-mobile.firebasestorage.app",
-  messagingSenderId: "여기에-messagingSenderId",
-  appId: "여기에-appId",
+  messagingSenderId: "1082395378458",
+  appId: "1:1082395378458:web:505d748f68bbbd9623e2a3",
 };
 
 export const isConfigured = !!firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes('여기에');
