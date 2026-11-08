@@ -32,9 +32,11 @@ const eq = (a, b, msg = '') => {
 };
 const ok = (v, msg) => { if (!v) throw new Error(msg || '조건 실패'); };
 
-test('알 카드 구성은 24장 72알, 덱은 20장', () => {
+test('알 카드 구성은 24장 87알(1·2·6알 3장씩, 3·4·5알 5장씩), 덱은 20장', () => {
   eq(E.EGG_CARDS.length, 24);
-  eq(E.diceSum(E.EGG_CARDS), 72);
+  eq(E.diceSum(E.EGG_CARDS), 87);
+  const count = v => E.EGG_CARDS.filter(x => x === v).length;
+  eq([1, 2, 3, 4, 5, 6].map(count), [3, 3, 5, 5, 5, 3]);
   const s = baseState();
   eq(s.deck.length, 20);
 });
@@ -209,7 +211,7 @@ test('무작위 한 판(4명)을 끝까지 하면 결과가 나온다', () => {
   }
   eq(s.phase, 'ended');
   const all = s.turnOrder.reduce((n, u) => n + E.scoreOf(s, u).eggs, 0);
-  ok(all <= 72 + 7, '알 총합이 범위 안');
+  ok(all <= 87 + 7, '알 총합이 범위 안');
 });
 
 export function runAll() {

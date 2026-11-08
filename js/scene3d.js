@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { COLOR_BY_ID, BOARD_SIZE, RAFT, positionOf } from './engine.js';
 
-const SLOTS = BOARD_SIZE + 1;     // 뗏목 1자리 + 21칸
+const SLOTS = BOARD_SIZE;         // 21칸이 원을 이룬다. 뗏목은 원 밖의 작은 섬
 const RING_R = 7.6;               // 칸이 놓인 원의 반지름
 const TILE_TOP = 0.32;            // 칸 윗면 높이
 const TURTLE_H = 0.46;            // 거북이 한 마리 높이(쌓기 간격)
@@ -11,9 +11,9 @@ const STEP_SEC = 0.15;            // 칸당 이동 시간
 const DIE = 0.95;
 
 const QUALITY = {
-  high:   { pixelRatio: 2,   shadows: true,  shadowMap: 1024, waves: true,  antialias: true },
-  medium: { pixelRatio: 1.5, shadows: true,  shadowMap: 512,  waves: true,  antialias: true },
-  low:    { pixelRatio: 1,   shadows: false, shadowMap: 256,  waves: false, antialias: false },
+  high:   { pixelRatio: 2,   shadows: true,  shadowMap: 1024, rich: true,  antialias: true },
+  medium: { pixelRatio: 1.5, shadows: true,  shadowMap: 512,  rich: true,  antialias: true },
+  low:    { pixelRatio: 1,   shadows: false, shadowMap: 256,  rich: false, antialias: false },
 };
 
 export function webglAvailable() {
@@ -131,7 +131,7 @@ function makeTurtle(colorHex) {
 
 function makeLabel(text, colorHex) {
   const tex = canvasTexture(320, 90, (g, w, h) => {
-    g.font = 'bold 54px system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+    g.font = 'bold 52px "Nanum Gothic", "NanumGothic", system-ui, sans-serif';
     const tw = Math.min(w - 8, g.measureText(text).width + 56);
     const x = (w - tw) / 2;
     roundRect(g, x, 6, tw, 78, 39);
@@ -202,15 +202,16 @@ export function createScene(container, opts = {}) {
   scene.add(sun);
 
   // 바다
-  const seaGeo = new THREE.PlaneGeometry(90, 90, 64, 64);
+  // 바다는 움직이지 않는 고정 색 (물결 애니메이션 없음)
+  const seaGeo = new THREE.PlaneGeometry(90, 90, 1, 1);
   seaGeo.rotateX(-Math.PI / 2);
-  const seaBase = seaGeo.attributes.position.array.slice();
-  const sea = new THREE.Mesh(seaGeo, new THREE.MeshStandardMaterial({ color: '#21a8d8', roughness: 0.18, metalness: 0.15, flatShading: true }));
+  const sea = new THREE.Mesh(seaGeo, new THREE.MeshStandardMaterial({ color: '#21a8d8', roughness: 0.6, metalness: 0 }));
   sea.position.y = -0.05;
   sea.receiveShadow = true;
   scene.add(sea);
-  const shallow = new THREE.Mesh(new THREE.RingGeometry(4.6, 9.6, 64), new THREE.MeshStandardMaterial({ color: '#5fe0e8', transparent: true, opacity: 0.55, roughness: 0.2 }));
-  shallow.rotation.x = -Math.PI / 2; shallow.position.y = 0.0;
+  const shallow = new THREE.Mesh(new THREE.RingGeometry(4.6, 9.6, 64), new THREE.MeshStandardMaterial({ color: '#4fd0e0', roughness: 0.6 }));
+  shallow.rotation.x = -Math.PI / 2; shallow.position.y = -0.02;
+  shallow.receiveShadow = true;
   scene.add(shallow);
 
   // 섬
@@ -281,7 +282,7 @@ export function createScene(container, opts = {}) {
       transparent: true, roughness: 0.8,
       map: canvasTexture(128, 128, (g, w) => {
         g.fillStyle = i === BOARD_SIZE ? '#c2410c' : '#7c6a4f';
-        g.font = 'bold 64px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.font = 'bold 64px "Nanum Gothic", "NanumGothic", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
         g.fillText(String(i), w / 2, w / 2 + 4);
       }),
     }));
@@ -295,7 +296,7 @@ export function createScene(container, opts = {}) {
   // 21번 둥지의 알
   const eggMat = new THREE.MeshStandardMaterial({ color: '#fff8ea', roughness: 0.4 });
   const nest = new THREE.Group();
-  const p21 = slotPos(BOARD_SIZE, RING_R + 1.35);
+  const p21 = slotPos(BOARD_SIZE, 4.7); // 21번 칸 안쪽 섬의 모래사장
   for (let i = 0; i < 6; i++) {
     const e = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 10), eggMat);
     e.scale.set(1, 1.25, 1);
@@ -306,7 +307,7 @@ export function createScene(container, opts = {}) {
   const nestBase = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.15, 8, 20), nestMat);
   nestBase.rotation.x = Math.PI / 2; nestBase.position.y = 0.08;
   nest.add(nestBase);
-  nest.position.copy(p21); nest.position.y = 0.05;
+  nest.position.copy(p21); nest.position.y = 0.4;
   scene.add(nest);
   // 7알 해변 (덱이 바닥나면 드러남)
   const bonusBeach = new THREE.Group();
@@ -314,11 +315,11 @@ export function createScene(container, opts = {}) {
   bonusBeach.add(beach);
   const seven = new THREE.Sprite(new THREE.SpriteMaterial({ map: canvasTexture(128, 128, (g, w) => {
     g.fillStyle = '#f59e0b'; g.beginPath(); g.arc(w / 2, w / 2, w / 2 - 4, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#fff'; g.font = 'bold 76px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('7', w / 2, w / 2 + 4);
+    g.fillStyle = '#fff'; g.font = 'bold 76px "Nanum Gothic", "NanumGothic", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('7', w / 2, w / 2 + 4);
   }), transparent: true }));
   seven.scale.set(0.9, 0.9, 1); seven.position.y = 1.0;
   bonusBeach.add(seven);
-  bonusBeach.position.copy(p21); bonusBeach.position.y = 0.05;
+  bonusBeach.position.copy(p21); bonusBeach.position.y = 0.4;
   bonusBeach.visible = false;
   scene.add(bonusBeach);
 
@@ -337,10 +338,21 @@ export function createScene(container, opts = {}) {
     const r = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.46, 2.1), rope);
     r.position.set(x, 0.12, 0); raft.add(r);
   }
-  const raftPos = slotPos(RAFT, RING_R + 0.55);
+  const raftPos = slotPos(2.1, RING_R + 2.5);
+  raftPos.y = 0;
   raft.position.copy(raftPos);
-  raft.rotation.y = headingAt(RAFT) + Math.PI / 2;
+  raft.rotation.y = -0.45;
+  // 뗏목 둘레 물보라 고리(정지)
+  // 뗏목 둘레 얕은 물(정지) — 칸 고리와 떨어진 작은 섬처럼 보이게
+  const raftShallow = new THREE.Mesh(new THREE.CircleGeometry(1.75, 40), new THREE.MeshStandardMaterial({ color: '#7fe3ec', roughness: 0.7 }));
+  raftShallow.rotation.x = -Math.PI / 2; raftShallow.position.copy(raftPos); raftShallow.position.y = -0.01;
+  const foam = new THREE.Mesh(new THREE.RingGeometry(1.62, 1.75, 40), new THREE.MeshStandardMaterial({ color: '#e6fbff', roughness: 0.8 }));
+  foam.rotation.x = -Math.PI / 2; foam.position.copy(raftPos); foam.position.y = 0.0;
+  scene.add(raftShallow, foam);
   scene.add(raft);
+  // 뗏목 위 거북이는 1번 칸 쪽을 바라본다
+  const tile1 = slotPos(1);
+  const RAFT_HEADING = Math.atan2(tile1.x - raftPos.x, tile1.z - raftPos.z);
   const RAFT_TOP = 0.36;
 
   // 내 차례 빛 고리
@@ -378,7 +390,7 @@ export function createScene(container, opts = {}) {
   }
   function floatText(text, at, color) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthTest: false, map: canvasTexture(256, 128, (g, w, h) => {
-      g.font = 'bold 72px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = 'bold 72px "Nanum Gothic", "NanumGothic", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.lineWidth = 10; g.strokeStyle = '#fff'; g.strokeText(text, w / 2, h / 2); g.fillStyle = color; g.fillText(text, w / 2, h / 2);
     }) }));
     sp.scale.set(2, 1, 1); sp.position.copy(at); sp.renderOrder = 20;
@@ -416,7 +428,7 @@ export function createScene(container, opts = {}) {
       const row = Math.floor(k / cols), col = k % cols;
       const local = new THREE.Vector3((col - (cols - 1) / 2) * 0.78, RAFT_TOP, (row - (Math.ceil(n / cols) - 1) / 2) * 0.72);
       local.applyAxisAngle(new THREE.Vector3(0, 1, 0), raft.rotation.y);
-      return { pos: raftPos.clone().add(local), rot: headingAt(RAFT), slot: RAFT, level: 0 };
+      return { pos: raftPos.clone().add(local), rot: RAFT_HEADING, slot: RAFT, level: 0 };
     }
     const base = slotPos(p.pos);
     base.y = TILE_TOP + p.idx * TURTLE_H;
@@ -486,7 +498,7 @@ export function createScene(container, opts = {}) {
       return tweenTo(t, h.pos, h.rot, 0.75, 1.2);
     }));
     ts.forEach(t => { t.obj.userData.swimming = 0; });
-    burst(raftPos.clone().add(new THREE.Vector3(0, 0.3, 0)), '#e0f7ff', Q.waves ? 30 : 14, 3.2, 1.2);
+    burst(raftPos.clone().add(new THREE.Vector3(0, 0.3, 0)), '#e0f7ff', Q.rich ? 30 : 14, 3.2, 1.2);
   }
 
   // ---------- 주사위 ----------
@@ -560,7 +572,7 @@ export function createScene(container, opts = {}) {
         await bustGroup(ev.group, state);
       } else if (ev.type === 'egg' || ev.type === 'bonus') {
         const at = slotPos(BOARD_SIZE); at.y = 1.2;
-        burst(at, ev.type === 'bonus' ? '#ffd23f' : '#fff8ea', Q.waves ? 26 : 12, 3.5, 1.4);
+        burst(at, ev.type === 'bonus' ? '#ffd23f' : '#fff8ea', Q.rich ? 26 : 12, 3.5, 1.4);
         floatText(`+${ev.card}`, at.clone().add(new THREE.Vector3(0, 0.8, 0)), ev.type === 'bonus' ? '#f59e0b' : '#16a34a');
         await sleep(500);
       }
@@ -569,6 +581,9 @@ export function createScene(container, opts = {}) {
     if (state.current && state.current.dice.length) showDice(state.current.dice, false);
   }
 
+  const fitPoints = [];
+  for (let i = 0; i < 36; i++) { const a = i / 36 * Math.PI * 2; for (const y of [0, 1.4]) fitPoints.push(new THREE.Vector3(Math.cos(a) * (RING_R + 1.0), y, Math.sin(a) * (RING_R + 1.0))); }
+  for (const [dx, dz] of [[-1.7, -1.7], [1.7, -1.7], [-1.7, 1.7], [1.7, 1.7]]) for (const y of [0, 1.4]) fitPoints.push(raftPos.clone().add(new THREE.Vector3(dx, y, dz)));
   // ---------- 카메라 맞추기 ----------
   let landscape = false;
   function fitCamera() {
@@ -579,16 +594,23 @@ export function createScene(container, opts = {}) {
     elevation = (landscape ? 42 : 52) * Math.PI / 180;
     const vfov = camera.fov * Math.PI / 180;
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
-    const R = RING_R + 1.7; // 보드 가장자리(칸·뗏목·둥지 포함)
-    // 기울어진 원판의 화면상 반높이 ≈ R·sin(elev) + 높이 여유
-    const halfV = R * Math.sin(elevation) + 1.2 * Math.cos(elevation);
-    const distH = R / Math.tan(hfov / 2) + R * Math.cos(elevation) * 0.35;
-    const distV = halfV / Math.tan(vfov / 2) + R * Math.cos(elevation) * 0.5;
-    const dist = Math.max(distH, distV) * 1.02;
-    const target = new THREE.Vector3(0, 0.4, 0.75);
-    camera.position.set(target.x, target.y + Math.sin(elevation) * dist, target.z + Math.cos(elevation) * dist);
-    camera.lookAt(target);
-    camera.updateProjectionMatrix();
+    void hfov;
+    const target = new THREE.Vector3(0.6, 0.4, 1.0);
+    const place = d => {
+      camera.position.set(target.x, target.y + Math.sin(elevation) * d, target.z + Math.cos(elevation) * d);
+      camera.lookAt(target);
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld();
+    };
+    const fits = d => {
+      place(d);
+      const v = new THREE.Vector3();
+      for (const p of fitPoints) { v.copy(p).project(camera); if (Math.abs(v.x) > 0.97 || Math.abs(v.y) > 0.95) return false; }
+      return true;
+    };
+    let lo = 8, hi = 120;
+    for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2; if (fits(mid)) hi = mid; else lo = mid; }
+    place(hi);
   }
 
   function resize() {
@@ -609,7 +631,6 @@ export function createScene(container, opts = {}) {
     sun.shadow.mapSize.set(Q.shadowMap, Q.shadowMap);
     if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
     scene.traverse(o => { if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.needsUpdate = true; }); } });
-    if (!Q.waves) { seaGeo.attributes.position.array.set(seaBase); seaGeo.attributes.position.needsUpdate = true; seaGeo.computeVertexNormals(); }
     resize();
   }
   setQuality(qualityName);
@@ -625,17 +646,6 @@ export function createScene(container, opts = {}) {
     const time = clock.elapsedTime;
     if (fpsCb && dt > 0) { fpsSamples.push(dt); if (fpsSamples.length >= 90) { const avg = fpsSamples.reduce((a, b) => a + b, 0) / fpsSamples.length; fpsSamples = []; fpsCb(1 / avg); } }
 
-    if (Q.waves) {
-      const arr = seaGeo.attributes.position.array;
-      for (let i = 0; i < arr.length; i += 3) {
-        const x = seaBase[i], z = seaBase[i + 2];
-        arr[i + 1] = Math.sin(x * 0.45 + time * 1.3) * 0.12 + Math.cos(z * 0.5 + time * 1.1) * 0.1;
-      }
-      seaGeo.attributes.position.needsUpdate = true;
-      seaGeo.computeVertexNormals();
-    }
-    raft.position.y = Math.sin(time * 1.6) * 0.04;
-    shallow.material.opacity = 0.45 + Math.sin(time * 0.8) * 0.08;
 
     for (const color of Object.keys(turtles)) {
       const t = turtles[color];

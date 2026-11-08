@@ -52,6 +52,13 @@ function setProgress(p, text) { $('progressBar').style.width = Math.round(p * 10
 
 async function boot() {
   watchOrientation(() => app.scene && app.scene.resize());
+  setProgress(0.1, '글꼴 불러오는 중…');
+  try {
+    await Promise.race([
+      Promise.all(['400 16px "Nanum Gothic"', '700 16px "Nanum Gothic"', '800 16px "Nanum Gothic"'].map(f => document.fonts.load(f))),
+      new Promise(r => setTimeout(r, 3000)),
+    ]);
+  } catch (e) { /* 글꼴 없이 진행 */ }
   setProgress(0.15, '3D 엔진 불러오는 중…');
   app.sceneReady = loadScene();
   await app.sceneReady.catch(() => {});
@@ -600,6 +607,7 @@ function showResult(state) {
                 <button class="btn ghost block" data-act="${app.mode === 'local' ? 'home-confirm' : 'to-lobby'}">${app.mode === 'local' ? '처음 화면으로' : '대기실로'}</button>`
              : '<p class="muted center" style="margin:0">호스트가 다음 판을 정하는 중…</p>'}
       <button class="btn ghost block small" data-act="hide-result">보드 보기</button>
+      ${app.mode === 'online' ? `<button class="btn ghost block small" data-act="exit">${host ? '방 닫고 나가기' : '나가기'}</button>` : ''}
     </div></div>`;
   $('result').hidden = false;
 }
@@ -657,6 +665,7 @@ document.addEventListener('click', async e => {
       else { try { await Room.startGame(app.code, app.room); } catch (err) { toast(err.message); } }
       return;
     case 'to-lobby': return Room.backToLobby(app.code);
+    case 'exit': return exitGame();
   }
 });
 
@@ -685,15 +694,18 @@ $('selQuality').addEventListener('change', e => {
   if (app.scene) app.scene.setQuality(v === 'auto' ? 'high' : v);
 });
 $('chkSound').addEventListener('change', e => sound(e.target.checked));
-$('btnLeave').addEventListener('click', async () => {
+async function exitGame() {
   $('menu').hidden = true;
   if (app.mode === 'online') {
-    if (!confirm(isHost() ? '방을 닫을까요? 모두 게임에서 나가게 돼요.' : '게임에서 나갈까요? 내 거북이는 자동으로 진행돼요.')) return;
+    const ended = app.state && app.state.phase === 'ended';
+    if (!confirm(isHost() ? '방을 닫을까요? 모두 게임에서 나가게 돼요.' : ended ? '방에서 나갈까요?' : '게임에서 나갈까요? 내 거북이는 자동으로 진행돼요.')) return;
     if (isHost()) await Room.closeRoom(app.code).catch(() => {});
     else await Room.leaveRoom(app.code, app.room);
-  } else if (!confirm('게임을 그만할까요?')) return;
+  } else if (!confirm('게임을 그만하고 처음 화면으로 갈까요?')) return;
   leaveLocal();
-});
+}
+$('btnLeave').addEventListener('click', exitGame);
+$('btnExit').addEventListener('click', exitGame);
 
 // 테스트·디버그용
 window.__mahe = app;
