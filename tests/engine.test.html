@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>규칙 엔진 테스트 · Mahe for mobile</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 16px; background: #f6f8fb; color: #111; }
+  h1 { font-size: 20px; }
+  li { padding: 6px 0; border-bottom: 1px solid #e5e7eb; list-style: none; }
+  .pass::before { content: '✅ '; } .fail::before { content: '❌ '; }
+  .err { color: #b91c1c; font-size: 13px; display: block; margin-left: 24px; }
+  #sum { font-weight: 700; font-size: 18px; }
+</style>
+</head>
+<body>
+<h1>Mahe for mobile · 규칙 엔진 테스트</h1>
+<p id="sum">실행 중…</p>
+<ul id="list" style="padding:0"></ul>
+<script type="module">
+import { runAll } from './engine.tests.js';
+const results = runAll();
+const list = document.getElementById('list');
+for (const r of results) {
+  const li = document.createElement('li');
+  li.className = r.pass ? 'pass' : 'fail';
+  li.textContent = r.name;
+  if (!r.pass) { const e = document.createElement('span'); e.className = 'err'; e.textContent = r.error; li.append(e); }
+  list.append(li);
+}
+const failed = results.filter(r => !r.pass).length;
+document.getElementById('sum').textContent = `${results.length - failed} / ${results.length} 통과`;
+document.title = failed ? 'FAIL' : 'PASS';
+</script>
+</body>
+</html>

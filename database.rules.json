@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "rooms": {
+      "$code": {
+        ".validate": "$code.matches(/^[0-9]{4}$/)",
+        ".write": "auth != null && data.exists() && !newData.exists() && (data.child('meta/hostUid').val() === auth.uid || data.child('meta/createdAt').val() < now - 86400000)",
+        "meta": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid) || data.child('hostUid').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['hostUid', 'status', 'createdAt'])",
+          "status": { ".validate": "newData.val() === 'lobby' || newData.val() === 'playing' || newData.val() === 'ended'" },
+          "hostUid": {
+            ".write": "auth != null && newData.val() === auth.uid && root.child('rooms/' + $code + '/players/' + auth.uid).exists() && (!root.child('rooms/' + $code + '/players/' + data.val()).exists() || root.child('rooms/' + $code + '/players/' + data.val() + '/connected').val() === false)"
+          }
+        },
+        "players": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && (($uid === auth.uid && (data.exists() || newData.parent().parent().child('meta/status').val() === 'lobby')) || root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['name', 'color', 'joinedAt'])",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 12" },
+            "color": { ".validate": "newData.val().matches(/^(red|orange|yellow|green|blue|purple|pink)$/)" },
+            "connected": { ".validate": "newData.isBoolean()" },
+            "joinedAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "game": {
+          ".read": "auth != null && root.child('rooms/' + $code + '/players/' + auth.uid).exists()",
+          ".write": "auth != null && (data.child('roller').val() === auth.uid || data.child('decider').val() === auth.uid || root.child('rooms/' + $code + '/meta/hostUid').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['version', 's']) && newData.child('s').isString() && newData.child('s').val().length < 20000 && (!data.exists() || newData.child('version').val() === data.child('version').val() + 1)"
+        }
+      }
+    }
+  }
+}
